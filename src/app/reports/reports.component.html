@@ -1,153 +1,109 @@
-<div class="d-flex flex-column align-self-stretch" class="min-height">
-	<nav class="navbar">
-    <div class="container-fluid">
+<div class="d-flex flex-column align-self-stretch min-height">
+  <nav class="navbar">
+    <div class="container-fluid margin-25">
       <div>
         <h2 class="mb-0"><strong> Reports</strong></h2>
         <figcaption>Easily generate a report of your transactions</figcaption>
       </div>
       <span class="nav-spacer"></span>
       <div ngbDropdown class="d-inline-block button-margin">
-        <button type="button" class="btn button-color" id="dropdownBasic1"
-          ngbDropdownToggle>{{selectedProjectValue}}</button>
+        <button type="button" class="btn button-color input-calendar" id="dropdownBasic1"
+          ngbDropdownToggle>{{selectedProjectName}}</button>
         <div ngbDropdownMenu aria-labelledby="dropdownGateway">
-          <button ngbDropdownItem (click)="changeSelectedProject('All Projects')">All Projects</button>
+          <button ngbDropdownItem (click)="changeSelectedProject('All Projects', 'allProjects')">All Projects</button>
           <button ngbDropdownItem *ngFor="let project of projects"
-            (click)="changeSelectedProject(project.name)">{{project.name}}</button>
+            (click)="changeSelectedProject(project.name, project.projectId)">{{project.name}}</button>
         </div>
       </div>
       <div ngbDropdown class="d-inline-block button-margin">
-        <button type="button" class="btn button-color" id="dropdownBasic1"
-          ngbDropdownToggle>{{selectedGatewayValue}}</button>
+        <button type="button" class="btn button-color input-calendar" id="dropdownBasic1"
+          ngbDropdownToggle>{{selectedGatewayName}}</button>
         <div ngbDropdownMenu aria-labelledby="dropdownGateway">
-          <button ngbDropdownItem (click)="changeSelectedGateway('All Gateway')">All Gateways</button>
+          <button ngbDropdownItem (click)="changeSelectedGateway('All Gateway', 'allGateways')">All Gateways</button>
           <button ngbDropdownItem *ngFor="let gateway of gateways"
-            (click)="changeSelectedGateway(gateway.name)">{{gateway.name}}</button>
+            (click)="changeSelectedGateway(gateway.name, gateway.gatewayId)">{{gateway.name}}</button>
         </div>
       </div>
       <div class="button-margin">
-      <form class="row row-cols-sm-auto">
-        <div class="col-12">
-          <div class="input-group">
-            <input class="form-control" placeholder="From Date" name="dp" [(ngModel)]="fromDate" ngbDatepicker style="color:red;"
-              #d="ngbDatepicker">
-            <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
+        <form class="row row-cols-sm-auto">
+          <div class="col-12">
+            <div class="input-group">
+              <input class="form-control input-calendar" placeholder="From Date" name="dp" [(ngModel)]="fromDate"
+                ngbDatepicker #d="ngbDatepicker">
+              <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
+            </div>
           </div>
-        </div>
-      </form>
-    </div>
-      <div class="button-margin">
-      <form class="row row-cols-sm-auto">
-        <div class="col-12">
-          <div class="input-group">
-            <input class="form-control" placeholder="To Date" name="dp2" [(ngModel)]="toDate" ngbDatepicker
-              #d1="ngbDatepicker">
-            <button class="btn btn-outline-secondary calendar" (click)="d1.toggle()" type="button"></button>
-          </div>
-        </div>
-      </form>
+        </form>
       </div>
-      <button class="btn btn-primary active button-margin" type="submit">Generate Report</button>  
+      <div class="button-margin">
+        <form class="row row-cols-sm-auto">
+          <div class="col-12">
+            <div class="input-group">
+              <input class="form-control input-calendar" placeholder="To Date" name="dp2" [(ngModel)]="toDate"
+                ngbDatepicker #d1="ngbDatepicker">
+              <button class="btn btn-outline-secondary calendar" (click)="d1.toggle()" type="button"></button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <button class="btn btn-primary active button-margin input-calendar" type="submit"
+        (click)="onGenerateReport()">Generate Report</button>
     </div>
   </nav>
 </div>
-
-<div style="display:flex; flex-direction: row;">
-   <mat-card class="example-card">
-      <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z8">
-        <ng-container matColumnDef="{{column}}" *ngFor="let column of columnsToDisplay">
-          <th mat-header-cell mat-header-row *matHeaderCellDef mat-sort-header> {{column}} </th>
-          <td mat-cell mat-row *matCellDef="let element"> {{element[column]}} </td>
-        </ng-container>
-
-        Expanded Content Column - The detail row is made up of this one column that spans across all columns
-        <ng-container matColumnDef="expandedDetail">
-          <td mat-cell *matCellDef="let element" [attr.colspan]="columnsToDisplay.length">
-            <div class="example-element-detail" *ngIf="element.innerTable?.data.length"
-              [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
-              <div class="inner-table mat-elevation-z8" *ngIf="expandedElement">
-                <table #innerTables mat-table [dataSource]="element.innerTable?.data">
-                  <ng-container matColumnDef="{{innerColumn}}" *ngFor="let innerColumn of innerDisplayedColumns">
-                    <th mat-header-cell *matHeaderCellDef mat-sort-header> {{innerColumn}} </th>
-                    <td mat-cell *matCellDef="let element"> {{element[innerColumn]}} </td>
-                  </ng-container>
-                  <tr mat-header-row *matHeaderRowDef="innerDisplayedColumns"></tr>
-                  <tr mat-row *matRowDef="let row; columns: innerDisplayedColumns;"></tr>
-                </table>
-              </div>
-            </div>
-          </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
-        <tr mat-row *matRowDef="let element; columns: columnsToDisplay;"
-          [class.example-element-row]="element.innerTable?.data.length"
-          [class.example-expanded-row]="expandedElement === element" (click)="toggleRow(element)">
-        </tr>
-        <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
-      </table>
-   </mat-card>
-   <mat-card class="example-card">
-       <p>charts!!!!</p>
-   </mat-card>
+<div *ngIf="noDataFound" class="text-center no-report-margin">
+  <h3 class="error">{{noDataFoundMsg}}</h3>
+  <div class="no-report-msg">{{noDataCaption}}</div>
 </div>
 
-
-
-
-  <!-- <div class="card-layout">
-    <mat-card>
-      <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z8">
-        <ng-container matColumnDef="{{column}}" *ngFor="let column of columnsToDisplay">
-          <th mat-header-cell mat-header-row *matHeaderCellDef mat-sort-header> {{column}} </th>
-          <td mat-cell mat-row *matCellDef="let element"> {{element[column]}} </td>
-        </ng-container>
-
-        Expanded Content Column - The detail row is made up of this one column that spans across all columns
-        <ng-container matColumnDef="expandedDetail">
-          <td mat-cell *matCellDef="let element" [attr.colspan]="columnsToDisplay.length">
-            <div class="example-element-detail" *ngIf="element.innerTable?.data.length"
-              [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
-              <div class="inner-table mat-elevation-z8" *ngIf="expandedElement">
-                <table #innerTables mat-table [dataSource]="element.innerTable?.data">
-                  <ng-container matColumnDef="{{innerColumn}}" *ngFor="let innerColumn of innerDisplayedColumns">
-                    <th mat-header-cell *matHeaderCellDef mat-sort-header> {{innerColumn}} </th>
-                    <td mat-cell *matCellDef="let element"> {{element[innerColumn]}} </td>
-                  </ng-container>
-                  <tr mat-header-row *matHeaderRowDef="innerDisplayedColumns"></tr>
-                  <tr mat-row *matRowDef="let row; columns: innerDisplayedColumns;"></tr>
-                </table>
-              </div>
+<div style="display:flex; flex-direction: row;" *ngIf="!noDataFound" class="">
+  <mat-card class="example-card card-color example-container margin-25"
+    [ngClass]="showChart === false ? 'inner-table': 'table-width' ">
+    <mat-card-subtitle><strong>{{selectedProjectName}} | {{selectedGatewayName}}</strong></mat-card-subtitle>
+    <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z8" *ngIf="dataSource">
+      <ng-container matColumnDef="{{column}}" *ngFor="let column of columnsToDisplay">
+        <th class="no-display" mat-header-cell mat-header-row *matHeaderCellDef> {{column}} </th>
+        <td mat-cell mat-row *matCellDef="let element"> <strong>{{element[column]}}</strong> </td>
+      </ng-container>
+      <ng-container matColumnDef="expandedDetail">
+        <td mat-cell *matCellDef="let element" [attr.colspan]="columnsToDisplay.length">
+          <div class="example-element-detail" *ngIf="element.innerTable?.data.length"
+            [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
+            <div class="inner-table mat-elevation-z8" *ngIf="expandedElement">
+              <table #innerTables mat-table [dataSource]="element.innerTable?.data">
+                <ng-container matColumnDef="{{innerColumn}}" *ngFor="let innerColumn of innerDisplayedColumns">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> {{innerColumn}} </th>
+                  <td mat-cell *matCellDef="let element"> {{element[innerColumn]}} </td>
+                </ng-container>
+                <tr mat-header-row *matHeaderRowDef="innerDisplayedColumns; sticky: true"></tr>
+                <tr mat-row *matRowDef="let row; columns: innerDisplayedColumns;"></tr>
+              </table>
             </div>
-          </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
-        <tr mat-row *matRowDef="let element; columns: columnsToDisplay;"
-          [class.example-element-row]="element.innerTable?.data.length"
-          [class.example-expanded-row]="expandedElement === element" (click)="toggleRow(element)">
-        </tr>
-        <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
-      </table>
-    </mat-card>
-    <mat-card>
-      <p>charts!!!!</p>
-    </mat-card>
-  </div> -->
-
-
-  <!-- <div class="card-group">
-    <div class="card">
-      <img src="..." class="card-img-top" alt="...">
-      <div class="card-body">
-        <h5 class="card-title">Card title</h5>
-        <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content.
-          This content is a little bit longer.</p>
-        <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
-      </div>
+          </div>
+        </td>
+      </ng-container>
+      <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+      <tr mat-row *matRowDef="let element; columns: columnsToDisplay;"
+        [class.example-element-row]="element.innerTable?.data.length"
+        [class.example-expanded-row]="expandedElement === element" (click)="toggleRow(element)">
+      </tr>
+      <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
+    </table>
+  </mat-card>
+  <mat-card class="example-card card-color example-container margin-25" *ngIf="showChart" [ngClass]="showChart === true ?  'chart-width' : ''">
+    <div id="chart">
+      <apx-chart [series]="chartOptions.series" [chart]="chartOptions.chart" [labels]="chartOptions.labels"
+        [responsive]="chartOptions.responsive"></apx-chart>
     </div>
-    <div class="card">
-      <img src="..." class="card-img-top" alt="...">
-      <div class="card-body">
-        <h5 class="card-title">Card title</h5>
-        <p class="card-text">This card has supporting text below as a natural lead-in to additional content.</p>
-        <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+    <mat-card-footer >
+      <div class="margin-25 mt-2">
+        <strong>TOTAL: {{allProjectTotal | number : '1.2-2'}} USD</strong>
       </div>
-    </div> -->
+    </mat-card-footer>
+  </mat-card>
+</div>
+<div style="display:flex; flex-direction: row;" *ngIf="!noDataFound && !showChart" class="margin-25">
+  <mat-card class="example-card card-color example-container-1">
+    <mat-card-subtitle><strong> TOTAL: {{allProjectTotal | number : '1.2-2'}} USD </strong></mat-card-subtitle>
+  </mat-card>
+</div>

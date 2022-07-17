@@ -20,6 +20,7 @@ import { DatePipe } from '@angular/common';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { FormsModule } from '@angular/forms';
+import { NgApexchartsModule } from 'ng-apexcharts';
 
 @NgModule({
   declarations: [
@@ -44,7 +45,8 @@ import { FormsModule } from '@angular/forms';
     MatCardModule,
     NgSelectModule,
     NgbModule,
-    FormsModule
+    FormsModule,
+    NgApexchartsModule
   ],
   providers: [DatePipe],
   bootstrap: [AppComponent]

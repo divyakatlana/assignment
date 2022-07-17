@@ -105,13 +105,6 @@ mat-form-field {
     color: white;
   }
 
-  div.input-group input#ngbDatepicker {
-
-    background-color: red !important;
-
-    color: black !important;
-}
-  
 .active-route, .navbar-brand {
   color: #ded6fb !important;
 }
@@ -121,5 +114,51 @@ mat-form-field {
 }
 
 .button-margin{
-  margin: 15px;
+  margin: 5px;
 }
+
+.no-report-msg{
+  width: 26%;
+  margin: auto;
+}
+
+.no-report-margin{
+margin-top: 145px;
+}
+
+.chart-width{
+  width: 40%;
+}
+
+.table-width{
+  width: 60%;
+}
+
+.no-display{
+  display: none;
+  height: 0px;
+}
+
+.mat-column-Amount{
+  text-align: right;
+  justify-content: flex-end;
+}
+
+.mat-column-total{
+  text-align: right;
+  justify-content: flex-end;
+}
+
+.example-container{
+  height: 380px;
+  overflow: auto;
+}
+
+.example-container-1{
+  height: auto;
+  width: 100%;
+  overflow: auto;
+  margin-top: 20px;
+}
+
+

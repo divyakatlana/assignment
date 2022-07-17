@@ -1,2 +1,19 @@
 @import "~bootstrap/dist/css/bootstrap.css";
 
+.error{
+    color: red;
+}
+
+.margin-25{
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.card-color{
+    background-color: #F1FAFE;
+}
+
+.input-calendar{
+    font-size: 0.75rem;
+}
+

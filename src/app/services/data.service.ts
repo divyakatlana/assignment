@@ -38,12 +38,9 @@ export class DataService {
   return this.http.get<Gateways>(environment.baseUrl + gatewaysEndpoint);
 }
 
-getAllReports(selectedValues: FormValues, from?: string, to?: string): Observable<ProjectData>{
-  console.log('formvaluesselected', selectedValues);
-  selectedValues.projectId === 'allProjects' ? '' : selectedValues.projectId;
-
+getAllReports(projectId: string, gatewayId: string, from?: string, to?: string): Observable<ProjectData>{
   return this.http.post<ProjectData>(environment.baseUrl + reportsEndpoint, 
-    JSON.stringify({'projectId': selectedValues.projectId === 'allProjects' ? '' : selectedValues.projectId
-  ,'gatewayId': selectedValues.gatewayId === 'allGateways' ? '' : selectedValues.gatewayId, from, to}), this.httpOptions);
+    JSON.stringify({'projectId': projectId === 'allProjects' ? '' : projectId
+  ,'gatewayId': gatewayId === 'allGateways' ? '' : gatewayId, from, to}), this.httpOptions);
 }
 }

@@ -18,16 +18,16 @@ export class ProjectReport {
 
 export class ReportData{
     groupId: string;
-    total?: number;
+    total?: string;
     innerTable: innerTableData[] | MatTableDataSource<innerTableData>
 }
 
 
 export class innerTableData{
-    created: string;
-    paymentId: string;
-    amount: number;
-    gatewayId?: string;
+    Date: string;
+    TransactionId: string;
+    Amount: number;
+    Gateway?: string;
 }
 
 export class Report{

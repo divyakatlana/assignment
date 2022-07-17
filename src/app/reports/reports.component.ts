@@ -1,15 +1,31 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { Gateway } from '../modals/gateway.model';
 import { Project } from '../modals/projects.model';
-import { FormValues, innerTableData, Report, ReportData } from '../modals/report.model';
+import { innerTableData, ReportData } from '../modals/report.model';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { MatTableDataSource } from '@angular/material/table';
-
-
 import { DataService } from '../services/data.service';
-import { DatePipe } from '@angular/common';
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
+
+import { ApexLegend, ApexPlotOptions, ChartComponent } from "ng-apexcharts";
+
+import {
+  ApexNonAxisChartSeries,
+  ApexResponsive,
+  ApexChart
+} from "ng-apexcharts";
+import { auto, left } from '@popperjs/core';
+
+export type ChartOptions = {
+  series: ApexNonAxisChartSeries;
+  chart: ApexChart;
+  responsive: ApexResponsive[];
+  labels: any;
+  plotOptions: ApexPlotOptions;
+  legend: ApexLegend;
+};
+
+
 
 @Component({
   selector: 'app-reports',
@@ -27,136 +43,175 @@ export class ReportsComponent implements OnInit {
   dataSource: MatTableDataSource<ReportData>;
   projects: Project[] = [];
   gateways: Gateway[] = [];
-  selectedProject: string = '';
-  selectedGateway: string = '';
-  selectionform: FormGroup;
   tableData: ReportData[] = [];
-  formValues: FormValues;
   columnsToDisplay = ['groupId', 'total'];
-  innerDisplayedColumns = ['created', 'gatewayId', 'paymentId', 'amount'];
+  innerDisplayedColumns = ['Date', 'Gateway', 'TransactionId', 'Amount'];
   expandedElement: ReportData | null;
-  populateTableData: ReportData[] =[];
-  selectedGatewayValue: string = 'Select Gateway';
-  selectedProjectValue: string = 'Select Project';
-  fromDate:  NgbDateStruct;
+  populateTableData: ReportData[] = [];
+  selectedGatewayName: string = 'Select Gateway';
+  selectedProjectName: string = 'Select Project';
+  selectedGatewayId: string = '';
+  selectedProjectId: string = '';
+  fromDate: NgbDateStruct;
   toDate: NgbDateStruct;
+  noDataFound: boolean = true;
+  noDataFoundMsg='No Reports';
+  noDataCaption = 'Currently you have no data for the reports to be generated. Once you start generating traffic through the Balance application the reports will be shown.';
+  showChart: boolean = false;
+  allProjectTotal: number = 0;
+  projectAmounts: number[] = [];
+
+  @ViewChild("chart") chart: ChartComponent;
+  public chartOptions: Partial<ChartOptions>;
 
   constructor(private dataSvc: DataService,
-    private formBuilder: FormBuilder,
-    private cd: ChangeDetectorRef,
-    private datePipe: DatePipe) { }
+    private cd: ChangeDetectorRef) { 
+
+    }
 
   ngOnInit(): void {
-    this.selectionform = this.formBuilder.group({
-      projectId: ['', Validators.required],
-      gatewayId: ['', Validators.required],
-      fromDate: [''],
-      toDate: ['']
-    });
-
     this.dataSvc.getAllUsers().subscribe((data) => console.log('all users', data.data[0]));
-    this.dataSvc.getAllProjects().subscribe(project => {
-      console.log('All projects', project.data);
-      this.projects = project.data;
-    });
-    console.log('project names', this.projects);
-    this.dataSvc.getAllGateways().subscribe(gateway => {
-      console.log('All gateways', gateway.data);
-      this.gateways = gateway.data;
-    });
-    console.log('project names', this.gateways);
+    this.dataSvc.getAllProjects().subscribe(project => { this.projects = project.data; });
+    this.dataSvc.getAllGateways().subscribe(gateway => { this.gateways = gateway.data;});
   }
 
 
-  onFormSubmit() {
+  onGenerateReport() {
     this.tableData = [];
-    if (this.selectionform.invalid) {
-      return;
-    }
-    else {
-      this.formValues = this.selectionform.value;
-   let  fromDate= this.datePipe.transform(this.formValues.fromDate,'yyyy-MM-dd');
-   let toDate = this.datePipe.transform(this.formValues.toDate,'yyyy-MM-dd');
-      console.log('form value', this.formValues);
-      this.dataSvc.getAllReports(this.formValues, fromDate, toDate).subscribe(reportData => {
-
-        if (this.formValues.projectId === 'allProjects') {
-
-          this.projects.forEach(project => {
-            this.tableData.push({
-              'groupId': project.projectId,
-              'innerTable': reportData.data.filter(data => data.projectId === project.projectId)
-                .map(filteredReportData => {
-                  return {
-                    'created': filteredReportData.created,
-                    'paymentId': filteredReportData.paymentId,
-                    'gatewayId': filteredReportData.gatewayId,
-                    'amount': filteredReportData.amount,
-                  }
-                })
-            })
-          })
-        }else if (this.formValues.gatewayId === 'allGateways') {
-          this.gateways.forEach(gateway => {
-            this.tableData.push({
-              'groupId': gateway.gatewayId,
-              'innerTable': reportData.data.filter(data => data.gatewayId === gateway.gatewayId)
-                .map(filteredReportData => {
-                  return {
-                    'created': filteredReportData.created,
-                    'paymentId': filteredReportData.paymentId,
-                    'amount': filteredReportData.amount,
-                  }
-                })
-            })
-          })
-        } else {
+    this.noDataFound = false;
+    let total: number = 0;
+    this.allProjectTotal = 0;
+    this.projectAmounts = [];
+    this.showChart = false;
+    this.selectedProjectName = this.selectedProjectId === '' ? 'All Projects' : this.selectedProjectName;
+    this.selectedGatewayName = this.selectedGatewayId === '' ? 'All Gateways' : this.selectedGatewayName;
+    let fromDate = this.fromDate? this.fromDate.year + '-' + this.fromDate.month + '-' + this.fromDate.day: '';
+    let toDate = this.toDate? this.toDate.year + '-' + this.toDate.month + '-' + this.toDate.day: '';
+    this.dataSvc.getAllReports(this.selectedProjectId, this.selectedGatewayId, fromDate, toDate).subscribe(reportData => {
+      if(reportData && reportData.data.length <=0){
+        this.noDataFound = true;
+      } else if (this.selectedProjectId === 'allProjects' || this.selectedProjectId === '') {
+        this.projects.forEach(project => {
+          let filteredData = reportData.data.filter(data => data.projectId === project.projectId);
+          total = filteredData.reduce((accumulator, current) => accumulator + current.amount, 0);
+          this.allProjectTotal = this.allProjectTotal+ total;
+          this.projectAmounts.push(total);
           this.tableData.push({
-            'groupId': this.formValues.projectId,
-            'innerTable': reportData.data.filter(data => data.projectId === this.formValues.projectId)
+            'groupId': project.name,
+            'total': 'TOTAL: ' + total.toFixed(2) + ' USD',
+            'innerTable': filteredData
               .map(filteredReportData => {
                 return {
-                  'created': filteredReportData.created,
-                  'paymentId': filteredReportData.paymentId,
-                  'gatewayId': filteredReportData.gatewayId,
-                  'amount': filteredReportData.amount,
+                  'Date': filteredReportData.created,
+                  'TransactionId': filteredReportData.paymentId,
+                  'Gateway': filteredReportData.gatewayId,
+                  'Amount': filteredReportData.amount,
                 }
               })
           })
+        })
+
+        if(this.selectedGatewayId !== 'allGateways' && this.selectedGatewayId !== ''){
+          this.showChart = true;
+          this.generateChart(this.projects.map(project => project.name));
         }
-        console.log('my table data ', this.tableData);
+
+      } else if (this.selectedGatewayId === 'allGateways' || this.selectedGatewayId === '') {
+        this.gateways.forEach(gateway => {
+          let filteredData = reportData.data.filter(data => data.gatewayId === gateway.gatewayId);
+          total = filteredData.reduce((accumulator, current) => accumulator + current.amount, 0);
+          this.allProjectTotal = this.allProjectTotal + total;
+          this.projectAmounts.push(total);
+          this.tableData.push({
+            'groupId': gateway.name,
+            'total': 'TOTAL: ' + total.toFixed(2) + ' USD', 
+            'innerTable': filteredData
+              .map(filteredReportData => {
+                return {
+                  'Date': filteredReportData.created,
+                  'TransactionId': filteredReportData.paymentId,
+                  'Amount': filteredReportData.amount,
+                }
+              })
+          })
+        })
+
+        this.showChart = true;
+        this.generateChart(this.gateways.map(gateway => gateway.name));
+
+      } else {
+        
+        let filteredData = reportData.data.filter(data => data.projectId === this.selectedProjectId)
+        total = filteredData.reduce((accumulator, current) => accumulator + current.amount, 0);
+        this.allProjectTotal = this.allProjectTotal + total;
+        this.projectAmounts.push(total);
+        this.tableData.push({
+          'groupId': this.selectedProjectId,
+          'total': 'TOTAL: ' + total.toFixed(2) + ' USD',
+          'innerTable': filteredData
+            .map(filteredReportData => {
+              return {
+                'Date': filteredReportData.created,
+                'TransactionId': filteredReportData.paymentId,
+                'Gateway': filteredReportData.gatewayId,
+                'Amount': filteredReportData.amount,
+              }
+            })
+        })
+
+      }
+      console.log('my table data ', this.tableData);
       this.generateTableData(this.tableData);
-      });
-    }
+    });
   }
 
+  generateChart(labels: string []){
+    this.chartOptions = {
+      series: this.projectAmounts,
+      chart: {
+        type: "donut",
+        width: "450px"
+      },
+      legend: {
+        show: true,
+        position: 'bottom',
+        horizontalAlign: left,
+        floating: true
+      },
+      labels: labels,
+      responsive: [
+        {
+          breakpoint: 480
+        }
+      ]
+    };
+  }
 
   toggleRow(element: ReportData) {
     element.innerTable && (element.innerTable as MatTableDataSource<innerTableData>).data.length ? (this.expandedElement = this.expandedElement === element ? null : element) : null;
     this.cd.detectChanges();
-   // this.innerTable.forEach((table, index) => (table.dataSource as MatTableDataSource<Address>).sort = this.innerSort.toArray()[index]);
   }
 
 
-  generateTableData(tableData: ReportData[]){
+  generateTableData(tableData: ReportData[]) {
+    this.populateTableData = [];
     tableData.forEach(user => {
       if (user.innerTable && Array.isArray(user.innerTable) && user.innerTable.length) {
-        this.populateTableData = [...this.populateTableData, {...user,  innerTable: new MatTableDataSource(user.innerTable)}];
+        this.populateTableData = [...this.populateTableData, { ...user, innerTable: new MatTableDataSource(user.innerTable) }];
       } else {
         this.populateTableData = [...this.populateTableData, user];
       }
     });
     this.dataSource = new MatTableDataSource(this.populateTableData);
     console.log('data source data', this.dataSource)
-   // this.dataSource.sort = this.sort;
   }
-  changeSelectedGateway(selectedValue: string){
- this.selectedGatewayValue = selectedValue;
- this.selectionform.setValue({gatewayID:selectedValue});
+  changeSelectedGateway(selectedGatewayName: string, selectedGatewayId?: string) {
+    this.selectedGatewayName = selectedGatewayName;
+    this.selectedGatewayId = selectedGatewayId;
   }
 
-  changeSelectedProject(selectedValue: string){
-    this.selectedProjectValue = selectedValue;
-    this.selectionform.setValue({projectID:selectedValue});
+  changeSelectedProject(selectedProjectName: string, selectedProjectId: string) {
+    this.selectedProjectName = selectedProjectName;
+    this.selectedProjectId = selectedProjectId;
   }
 }
