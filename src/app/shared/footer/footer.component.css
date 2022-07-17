@@ -1,0 +1,12 @@
+.footer {
+    position: fixed;
+    background-color: 	#dcdcdc;
+    bottom: 0px;
+    width: 100%;
+    height: 50px;
+    color: blue;
+}
+
+.margintop{
+    margin-top: 15px;
+}
