@@ -1,20 +1,17 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { Gateway } from '../modals/gateway.model';
 import { Project } from '../modals/projects.model';
-import { innerTableData, ReportData } from '../modals/report.model';
+import { innerTableData, ProjectData, ReportData } from '../modals/report.model';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { MatTableDataSource } from '@angular/material/table';
 import { DataService } from '../services/data.service';
 import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
-
 import { ApexLegend, ApexPlotOptions, ChartComponent } from "ng-apexcharts";
-
 import {
   ApexNonAxisChartSeries,
   ApexResponsive,
   ApexChart
 } from "ng-apexcharts";
-import { auto, left } from '@popperjs/core';
 
 export type ChartOptions = {
   series: ApexNonAxisChartSeries;
@@ -55,7 +52,8 @@ export class ReportsComponent implements OnInit {
   fromDate: NgbDateStruct;
   toDate: NgbDateStruct;
   noDataFound: boolean = true;
-  noDataFoundMsg='No Reports';
+  error: boolean = false;
+  noDataFoundMsg = 'No Reports';
   noDataCaption = 'Currently you have no data for the reports to be generated. Once you start generating traffic through the Balance application the reports will be shown.';
   showChart: boolean = false;
   allProjectTotal: number = 0;
@@ -63,90 +61,61 @@ export class ReportsComponent implements OnInit {
 
   @ViewChild("chart") chart: ChartComponent;
   public chartOptions: Partial<ChartOptions>;
-
   constructor(private dataSvc: DataService,
-    private cd: ChangeDetectorRef) { 
-
-    }
+    private cd: ChangeDetectorRef) { }
 
   ngOnInit(): void {
-    this.dataSvc.getAllUsers().subscribe((data) => console.log('all users', data.data[0]));
-    this.dataSvc.getAllProjects().subscribe(project => { this.projects = project.data; });
-    this.dataSvc.getAllGateways().subscribe(gateway => { this.gateways = gateway.data;});
+    this.error = false;
+    this.dataSvc.getAllProjects().subscribe({
+      next: (project) => { this.projects = project.data; },
+      error: (err) => {
+        this.noDataFound = true;
+        this.error = true;
+        this.noDataFoundMsg = 'Unable to get Projects.'
+      }
+    });
+    this.dataSvc.getAllGateways().subscribe({
+      next: (gateway) => { this.gateways = gateway.data; },
+      error: (err) => {
+        this.noDataFound = true;
+        this.error = true;
+        this.noDataFoundMsg = 'Unable to get Gateways.'
+      }
+    });
   }
-
 
   onGenerateReport() {
     this.tableData = [];
     this.noDataFound = false;
-    let total: number = 0;
     this.allProjectTotal = 0;
     this.projectAmounts = [];
     this.showChart = false;
     this.selectedProjectName = this.selectedProjectId === '' ? 'All Projects' : this.selectedProjectName;
     this.selectedGatewayName = this.selectedGatewayId === '' ? 'All Gateways' : this.selectedGatewayName;
-    let fromDate = this.fromDate? this.fromDate.year + '-' + this.fromDate.month + '-' + this.fromDate.day: '';
-    let toDate = this.toDate? this.toDate.year + '-' + this.toDate.month + '-' + this.toDate.day: '';
-    this.dataSvc.getAllReports(this.selectedProjectId, this.selectedGatewayId, fromDate, toDate).subscribe(reportData => {
-      if(reportData && reportData.data.length <=0){
-        this.noDataFound = true;
-      } else if (this.selectedProjectId === 'allProjects' || this.selectedProjectId === '') {
-        this.projects.forEach(project => {
-          let filteredData = reportData.data.filter(data => data.projectId === project.projectId);
-          total = filteredData.reduce((accumulator, current) => accumulator + current.amount, 0);
-          this.allProjectTotal = this.allProjectTotal+ total;
-          this.projectAmounts.push(total);
-          this.tableData.push({
-            'groupId': project.name,
-            'total': 'TOTAL: ' + total.toFixed(2) + ' USD',
-            'innerTable': filteredData
-              .map(filteredReportData => {
-                return {
-                  'Date': filteredReportData.created,
-                  'TransactionId': filteredReportData.paymentId,
-                  'Gateway': filteredReportData.gatewayId,
-                  'Amount': filteredReportData.amount,
-                }
-              })
-          })
-        })
+    let fromDate = this.fromDate ? this.fromDate.year + '-' + this.fromDate.month + '-' + this.fromDate.day : '';
+    let toDate = this.toDate ? this.toDate.year + '-' + this.toDate.month + '-' + this.toDate.day : '';
 
-        if(this.selectedGatewayId !== 'allGateways' && this.selectedGatewayId !== ''){
-          this.showChart = true;
-          this.generateChart(this.projects.map(project => project.name));
-        }
+    this.dataSvc.getAllReports(this.selectedProjectId, this.selectedGatewayId, fromDate, toDate).subscribe(
+      {
+        next:
+          (reportData) => {
+            this.mapResponse(reportData);
+          }, error: (err) => { this.noDataFound = true; this.noDataFoundMsg = 'Unable to fetch Report' }
+      });
+  }
 
-      } else if (this.selectedGatewayId === 'allGateways' || this.selectedGatewayId === '') {
-        this.gateways.forEach(gateway => {
-          let filteredData = reportData.data.filter(data => data.gatewayId === gateway.gatewayId);
-          total = filteredData.reduce((accumulator, current) => accumulator + current.amount, 0);
-          this.allProjectTotal = this.allProjectTotal + total;
-          this.projectAmounts.push(total);
-          this.tableData.push({
-            'groupId': gateway.name,
-            'total': 'TOTAL: ' + total.toFixed(2) + ' USD', 
-            'innerTable': filteredData
-              .map(filteredReportData => {
-                return {
-                  'Date': filteredReportData.created,
-                  'TransactionId': filteredReportData.paymentId,
-                  'Amount': filteredReportData.amount,
-                }
-              })
-          })
-        })
-
-        this.showChart = true;
-        this.generateChart(this.gateways.map(gateway => gateway.name));
-
-      } else {
-        
-        let filteredData = reportData.data.filter(data => data.projectId === this.selectedProjectId)
+  mapResponse(reportData: ProjectData) {
+    let total: number = 0;
+    if (reportData && reportData.data.length <= 0) {
+      this.noDataFound = true;
+    } else if (this.selectedProjectId === 'allProjects' || this.selectedProjectId === '') {
+      this.projects.forEach(project => {
+        let filteredData = reportData.data.filter(data => data.projectId === project.projectId);
         total = filteredData.reduce((accumulator, current) => accumulator + current.amount, 0);
         this.allProjectTotal = this.allProjectTotal + total;
         this.projectAmounts.push(total);
         this.tableData.push({
-          'groupId': this.selectedProjectId,
+          'groupId': project.name,
           'total': 'TOTAL: ' + total.toFixed(2) + ' USD',
           'innerTable': filteredData
             .map(filteredReportData => {
@@ -158,25 +127,67 @@ export class ReportsComponent implements OnInit {
               }
             })
         })
-
+      })
+      if (this.selectedGatewayId !== 'allGateways' && this.selectedGatewayId !== '') {
+        this.showChart = true;
+        this.generateChart(this.projects.map(project => project.name));
       }
-      console.log('my table data ', this.tableData);
-      this.generateTableData(this.tableData);
-    });
+    } else if (this.selectedGatewayId === 'allGateways' || this.selectedGatewayId === '') {
+      this.gateways.forEach(gateway => {
+        let filteredData = reportData.data.filter(data => data.gatewayId === gateway.gatewayId);
+        total = filteredData.reduce((accumulator, current) => accumulator + current.amount, 0);
+        this.allProjectTotal = this.allProjectTotal + total;
+        this.projectAmounts.push(total);
+        this.tableData.push({
+          'groupId': gateway.name,
+          'total': 'TOTAL: ' + total.toFixed(2) + ' USD',
+          'innerTable': filteredData
+            .map(filteredReportData => {
+              return {
+                'Date': filteredReportData.created,
+                'TransactionId': filteredReportData.paymentId,
+                'Amount': filteredReportData.amount,
+              }
+            })
+        })
+      })
+      this.showChart = true;
+      this.generateChart(this.gateways.map(gateway => gateway.name));
+
+    } else {
+      let filteredData = reportData.data.filter(data => data.projectId === this.selectedProjectId)
+      total = filteredData.reduce((accumulator, current) => accumulator + current.amount, 0);
+      this.allProjectTotal = this.allProjectTotal + total;
+      this.projectAmounts.push(total);
+      this.tableData.push({
+        'groupId': this.selectedProjectId,
+        'total': 'TOTAL: ' + total.toFixed(2) + ' USD',
+        'innerTable': filteredData
+          .map(filteredReportData => {
+            return {
+              'Date': filteredReportData.created,
+              'TransactionId': filteredReportData.paymentId,
+              'Gateway': filteredReportData.gatewayId,
+              'Amount': filteredReportData.amount,
+            }
+          })
+      })
+    }
+    this.generateTableData(this.tableData);
   }
 
-  generateChart(labels: string []){
+  generateChart(labels: string[]) {
     this.chartOptions = {
       series: this.projectAmounts,
       chart: {
         type: "donut",
-        width: "450px"
+        width: "430px"
       },
       legend: {
         show: true,
-        position: 'bottom',
-        horizontalAlign: left,
-        floating: true
+        position: 'top',
+        horizontalAlign: 'center',
+        height: 45
       },
       labels: labels,
       responsive: [
@@ -203,8 +214,8 @@ export class ReportsComponent implements OnInit {
       }
     });
     this.dataSource = new MatTableDataSource(this.populateTableData);
-    console.log('data source data', this.dataSource)
   }
+
   changeSelectedGateway(selectedGatewayName: string, selectedGatewayId?: string) {
     this.selectedGatewayName = selectedGatewayName;
     this.selectedGatewayId = selectedGatewayId;

@@ -4,7 +4,7 @@ import { ReportsComponent } from './reports/reports.component';
 
 const routes: Routes = [
   { path: 'reports', component: ReportsComponent },
-  { path: '**',   redirectTo: '', pathMatch: 'full' }
+  { path: '**',   redirectTo: '/reports', pathMatch: 'full' }
 ];
 
 @NgModule({

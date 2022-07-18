@@ -5,3 +5,8 @@
 .header{
     width: 100%;
 }
+
+.mat-toolbar-style{
+    padding: 0 35px;
+    height: 40px;
+}

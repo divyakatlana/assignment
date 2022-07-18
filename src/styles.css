@@ -13,7 +13,37 @@
     background-color: #F1FAFE;
 }
 
-.input-calendar{
+.font-size-input{
     font-size: 0.75rem;
 }
+.button-color{
+    background-color: #1BC5BD;
+    color: white;
+  }
+
+.nav-spacer {
+  flex: 1 1 auto;
+}
+
+.button-margin{
+  margin: 5px;
+}
+
+.no-report-msg{
+  width: 26%;
+  margin: auto;
+}
+
+.no-report-margin{
+margin-top: 145px;
+}
+
+.chart-width{
+  width: 45%;
+}
+
+.table-width{
+  width: 55%;
+}
+
 

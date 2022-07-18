@@ -1,7 +1,6 @@
 export class Gateways {
- data: Gateway[]
+    data: Gateway[]
 }
-
 
 export class Gateway {
     gatewayId: string;

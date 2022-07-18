@@ -7,7 +7,7 @@
       </div>
       <span class="nav-spacer"></span>
       <div ngbDropdown class="d-inline-block button-margin">
-        <button type="button" class="btn button-color input-calendar" id="dropdownBasic1"
+        <button type="button" class="btn button-color font-size-input" id="dropdownBasicProject"
           ngbDropdownToggle>{{selectedProjectName}}</button>
         <div ngbDropdownMenu aria-labelledby="dropdownGateway">
           <button ngbDropdownItem (click)="changeSelectedProject('All Projects', 'allProjects')">All Projects</button>
@@ -16,7 +16,7 @@
         </div>
       </div>
       <div ngbDropdown class="d-inline-block button-margin">
-        <button type="button" class="btn button-color input-calendar" id="dropdownBasic1"
+        <button type="button" class="btn button-color font-size-input" id="dropdownGateway"
           ngbDropdownToggle>{{selectedGatewayName}}</button>
         <div ngbDropdownMenu aria-labelledby="dropdownGateway">
           <button ngbDropdownItem (click)="changeSelectedGateway('All Gateway', 'allGateways')">All Gateways</button>
@@ -28,9 +28,9 @@
         <form class="row row-cols-sm-auto">
           <div class="col-12">
             <div class="input-group">
-              <input class="form-control input-calendar" placeholder="From Date" name="dp" [(ngModel)]="fromDate"
-                ngbDatepicker #d="ngbDatepicker">
-              <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button"></button>
+              <input class="form-control font-size-input" placeholder="From Date" name="dp" [(ngModel)]="fromDate"
+                ngbDatepicker #datePicker1="ngbDatepicker">
+              <button class="btn btn-outline-secondary calendar" (click)="datePicker1.toggle()" type="button"></button>
             </div>
           </div>
         </form>
@@ -39,15 +39,15 @@
         <form class="row row-cols-sm-auto">
           <div class="col-12">
             <div class="input-group">
-              <input class="form-control input-calendar" placeholder="To Date" name="dp2" [(ngModel)]="toDate"
-                ngbDatepicker #d1="ngbDatepicker">
-              <button class="btn btn-outline-secondary calendar" (click)="d1.toggle()" type="button"></button>
+              <input class="form-control font-size-input" placeholder="To Date" name="dp2" [(ngModel)]="toDate"
+                ngbDatepicker #datePicker2="ngbDatepicker">
+              <button class="btn btn-outline-secondary calendar" (click)="datePicker2.toggle()" type="button"></button>
             </div>
           </div>
         </form>
       </div>
-      <button class="btn btn-primary active button-margin input-calendar" type="submit"
-        (click)="onGenerateReport()">Generate Report</button>
+      <button class="btn btn-primary active button-margin font-size-input" type="submit"
+        (click)="onGenerateReport()" [disabled]="error">Generate Report</button>
     </div>
   </nav>
 </div>
@@ -56,23 +56,23 @@
   <div class="no-report-msg">{{noDataCaption}}</div>
 </div>
 
-<div style="display:flex; flex-direction: row;" *ngIf="!noDataFound" class="">
-  <mat-card class="example-card card-color example-container margin-25"
+<div *ngIf="!noDataFound" class="d-flex flex-row">
+  <mat-card class="card-color card-container margin-25"
     [ngClass]="showChart === false ? 'inner-table': 'table-width' ">
     <mat-card-subtitle><strong>{{selectedProjectName}} | {{selectedGatewayName}}</strong></mat-card-subtitle>
     <table mat-table [dataSource]="dataSource" multiTemplateDataRows class="mat-elevation-z8" *ngIf="dataSource">
       <ng-container matColumnDef="{{column}}" *ngFor="let column of columnsToDisplay">
-        <th class="no-display" mat-header-cell mat-header-row *matHeaderCellDef> {{column}} </th>
+        <th mat-header-cell *matHeaderCellDef> </th>
         <td mat-cell mat-row *matCellDef="let element"> <strong>{{element[column]}}</strong> </td>
       </ng-container>
       <ng-container matColumnDef="expandedDetail">
         <td mat-cell *matCellDef="let element" [attr.colspan]="columnsToDisplay.length">
-          <div class="example-element-detail" *ngIf="element.innerTable?.data.length"
+          <div class="element-detail" *ngIf="element.innerTable?.data.length"
             [@detailExpand]="element == expandedElement ? 'expanded' : 'collapsed'">
             <div class="inner-table mat-elevation-z8" *ngIf="expandedElement">
               <table #innerTables mat-table [dataSource]="element.innerTable?.data">
                 <ng-container matColumnDef="{{innerColumn}}" *ngFor="let innerColumn of innerDisplayedColumns">
-                  <th mat-header-cell *matHeaderCellDef mat-sort-header> {{innerColumn}} </th>
+                  <th mat-header-cell *matHeaderCellDef> {{innerColumn}} </th>
                   <td mat-cell *matCellDef="let element"> {{element[innerColumn]}} </td>
                 </ng-container>
                 <tr mat-header-row *matHeaderRowDef="innerDisplayedColumns; sticky: true"></tr>
@@ -82,18 +82,18 @@
           </div>
         </td>
       </ng-container>
-      <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+      
       <tr mat-row *matRowDef="let element; columns: columnsToDisplay;"
-        [class.example-element-row]="element.innerTable?.data.length"
-        [class.example-expanded-row]="expandedElement === element" (click)="toggleRow(element)">
+        [class.element-row]="element.innerTable?.data.length"
+        [class.expanded-row]="expandedElement === element" (click)="toggleRow(element)">
       </tr>
-      <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="example-detail-row"></tr>
+      <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
     </table>
   </mat-card>
-  <mat-card class="example-card card-color example-container margin-25" *ngIf="showChart" [ngClass]="showChart === true ?  'chart-width' : ''">
+  <mat-card class="card-color card-container margin-25" *ngIf="showChart" [ngClass]="showChart === true ?  'chart-width' : ''">
     <div id="chart">
       <apx-chart [series]="chartOptions.series" [chart]="chartOptions.chart" [labels]="chartOptions.labels"
-        [responsive]="chartOptions.responsive"></apx-chart>
+        [responsive]="chartOptions.responsive" [legend]="chartOptions.legend"></apx-chart>
     </div>
     <mat-card-footer >
       <div class="margin-25 mt-2">
@@ -102,8 +102,8 @@
     </mat-card-footer>
   </mat-card>
 </div>
-<div style="display:flex; flex-direction: row;" *ngIf="!noDataFound && !showChart" class="margin-25">
-  <mat-card class="example-card card-color example-container-1">
+<div *ngIf="!noDataFound && !showChart" class="margin-25 d-flex flex-row">
+  <mat-card class="card-color total-container-footer">
     <mat-card-subtitle><strong> TOTAL: {{allProjectTotal | number : '1.2-2'}} USD </strong></mat-card-subtitle>
   </mat-card>
 </div>
