@@ -25,19 +25,21 @@ export class DataService {
     })
   };
 
-
+  // service to get all users 
   getAllUsers(): Observable<Users> {
     return this.http.get<Users>(environment.baseUrl + usersEndpoint);
   }
-
+  // service to get all projects
   getAllProjects(): Observable<Projects> {
     return this.http.get<Projects>(environment.baseUrl + projetsEndpoint);
   }
 
+  //service to get all gateways
   getAllGateways(): Observable<Gateways> {
     return this.http.get<Gateways>(environment.baseUrl + gatewaysEndpoint);
   }
 
+  // service to get reports of the basis of selected prject, gateway, fromdate and todate.
   getAllReports(projectId: string, gatewayId: string, from?: string, to?: string): Observable<ProjectData> {
     return this.http.post<ProjectData>(environment.baseUrl + reportsEndpoint,
       JSON.stringify({

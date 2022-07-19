@@ -27,10 +27,10 @@
       <div class="button-margin">
         <form class="row row-cols-sm-auto">
           <div class="col-12">
-            <div class="input-group">
-              <input class="form-control font-size-input" placeholder="From Date" name="dp" [(ngModel)]="fromDate"
+            <div class="input-group datepicker-width">
+              <input class="form-control font-size-input button-color" placeholder="From Date" name="dp" [(ngModel)]="fromDate"
                 ngbDatepicker #datePicker1="ngbDatepicker">
-              <button class="btn btn-outline-secondary calendar" (click)="datePicker1.toggle()" type="button"></button>
+              <button class="btn calendar button-color" (click)="datePicker1.toggle()" type="button"></button>
             </div>
           </div>
         </form>
@@ -38,10 +38,10 @@
       <div class="button-margin">
         <form class="row row-cols-sm-auto">
           <div class="col-12">
-            <div class="input-group">
-              <input class="form-control font-size-input" placeholder="To Date" name="dp2" [(ngModel)]="toDate"
+            <div class="input-group  datepicker-width">
+              <input class="form-control font-size-input button-color" placeholder="To Date" name="dp2" [(ngModel)]="toDate"
                 ngbDatepicker #datePicker2="ngbDatepicker">
-              <button class="btn btn-outline-secondary calendar" (click)="datePicker2.toggle()" type="button"></button>
+              <button class="btn calendar button-color" (click)="datePicker2.toggle()" type="button"></button>
             </div>
           </div>
         </form>
@@ -90,14 +90,14 @@
       <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
     </table>
   </mat-card>
-  <mat-card class="card-color card-container margin-25" *ngIf="showChart" [ngClass]="showChart === true ?  'chart-width' : ''">
+  <mat-card class="card-container margin-25" *ngIf="showChart" [ngClass]="showChart === true ?  'chart-width' : ''">
     <div id="chart">
       <apx-chart [series]="chartOptions.series" [chart]="chartOptions.chart" [labels]="chartOptions.labels"
         [responsive]="chartOptions.responsive" [legend]="chartOptions.legend"></apx-chart>
     </div>
     <mat-card-footer >
-      <div class="margin-25 mt-2">
-        <strong>TOTAL: {{allProjectTotal | number : '1.2-2'}} USD</strong>
+      <div class="mt-2 card-color">
+        <strong class="margin-25 ">TOTAL: {{allProjectTotal | number : '1.2-2'}} USD</strong>
       </div>
     </mat-card-footer>
   </mat-card>

@@ -83,7 +83,7 @@ export class ReportsComponent implements OnInit {
       }
     });
   }
-
+  //methods gets called on generate report button click and calls report API to generate the report.
   onGenerateReport() {
     this.tableData = [];
     this.noDataFound = false;
@@ -103,9 +103,10 @@ export class ReportsComponent implements OnInit {
           }, error: (err) => { this.noDataFound = true; this.noDataFoundMsg = 'Unable to fetch Report' }
       });
   }
-
+  //maethod to filter out the repsonse according selected projects or gateways, depending upon different combinations.
   mapResponse(reportData: ProjectData) {
     let total: number = 0;
+    this.innerDisplayedColumns = ['Date', 'Gateway', 'TransactionId', 'Amount'];
     if (reportData && reportData.data.length <= 0) {
       this.noDataFound = true;
     } else if (this.selectedProjectId === 'allProjects' || this.selectedProjectId === '') {
@@ -122,13 +123,14 @@ export class ReportsComponent implements OnInit {
               return {
                 'Date': filteredReportData.created,
                 'TransactionId': filteredReportData.paymentId,
-                'Gateway': filteredReportData.gatewayId,
+                'Gateway': this.gateways.filter(gateway => gateway.gatewayId === filteredReportData.gatewayId)[0]?.name,
                 'Amount': filteredReportData.amount,
               }
             })
         })
       })
       if (this.selectedGatewayId !== 'allGateways' && this.selectedGatewayId !== '') {
+        this.innerDisplayedColumns = ['Date', 'TransactionId', 'Amount'];
         this.showChart = true;
         this.generateChart(this.projects.map(project => project.name));
       }
@@ -150,6 +152,7 @@ export class ReportsComponent implements OnInit {
               }
             })
         })
+        this.innerDisplayedColumns = ['Date', 'TransactionId', 'Amount'];
       })
       this.showChart = true;
       this.generateChart(this.gateways.map(gateway => gateway.name));
@@ -160,22 +163,23 @@ export class ReportsComponent implements OnInit {
       this.allProjectTotal = this.allProjectTotal + total;
       this.projectAmounts.push(total);
       this.tableData.push({
-        'groupId': this.selectedProjectId,
+        'groupId': this.selectedProjectName,
         'total': 'TOTAL: ' + total.toFixed(2) + ' USD',
         'innerTable': filteredData
           .map(filteredReportData => {
             return {
               'Date': filteredReportData.created,
               'TransactionId': filteredReportData.paymentId,
-              'Gateway': filteredReportData.gatewayId,
+              'Gateway': this.gateways.filter(gateway => gateway.gatewayId === filteredReportData.gatewayId)[0]?.name,
               'Amount': filteredReportData.amount,
             }
           })
       })
+      this.innerDisplayedColumns = ['Date', 'TransactionId', 'Amount'];
     }
     this.generateTableData(this.tableData);
   }
-
+  // method to configure chart options and chart data
   generateChart(labels: string[]) {
     this.chartOptions = {
       series: this.projectAmounts,
@@ -197,30 +201,31 @@ export class ReportsComponent implements OnInit {
       ]
     };
   }
-
+  //method gets to expand or collapse the row.
   toggleRow(element: ReportData) {
     element.innerTable && (element.innerTable as MatTableDataSource<innerTableData>).data.length ? (this.expandedElement = this.expandedElement === element ? null : element) : null;
     this.cd.detectChanges();
   }
 
-
+  // method to populate data source assigned to mat-table.
   generateTableData(tableData: ReportData[]) {
     this.populateTableData = [];
-    tableData.forEach(user => {
-      if (user.innerTable && Array.isArray(user.innerTable) && user.innerTable.length) {
-        this.populateTableData = [...this.populateTableData, { ...user, innerTable: new MatTableDataSource(user.innerTable) }];
+    tableData.forEach(data => {
+      if (data.innerTable && Array.isArray(data.innerTable) && data.innerTable.length) {
+        this.populateTableData = [...this.populateTableData, { ...data, innerTable: new MatTableDataSource(data.innerTable) }];
       } else {
-        this.populateTableData = [...this.populateTableData, user];
+        this.populateTableData = [...this.populateTableData, data];
       }
     });
     this.dataSource = new MatTableDataSource(this.populateTableData);
   }
-
+  // method called when user changes option from gateway dropdown
   changeSelectedGateway(selectedGatewayName: string, selectedGatewayId?: string) {
     this.selectedGatewayName = selectedGatewayName;
     this.selectedGatewayId = selectedGatewayId;
   }
 
+  // method called when user changes option from project dropdown
   changeSelectedProject(selectedProjectName: string, selectedProjectId: string) {
     this.selectedProjectName = selectedProjectName;
     this.selectedProjectId = selectedProjectId;
