@@ -28,8 +28,7 @@
         <form class="row row-cols-sm-auto">
           <div class="col-12">
             <div class="input-group datepicker-width">
-              <input class="form-control font-size-input button-color" placeholder="From Date" name="dp" [(ngModel)]="fromDate"
-                ngbDatepicker #datePicker1="ngbDatepicker">
+              <input class="form-control font-size-input button-color" placeholder="From Date" name="dp" [(ngModel)]="fromDate"  ngbDatepicker #datePicker1="ngbDatepicker">
               <button class="btn calendar button-color" (click)="datePicker1.toggle()" type="button"></button>
             </div>
           </div>
@@ -39,8 +38,8 @@
         <form class="row row-cols-sm-auto">
           <div class="col-12">
             <div class="input-group  datepicker-width">
-              <input class="form-control font-size-input button-color" placeholder="To Date" name="dp2" [(ngModel)]="toDate"
-                ngbDatepicker #datePicker2="ngbDatepicker">
+              <input class="form-control font-size-input button-color" placeholder="To Date" name="dp2" [(ngModel)]="toDate" ngbDatepicker #datePicker2="ngbDatepicker" 
+              [minDate]="fromDate" [maxDate]="today">
               <button class="btn calendar button-color" (click)="datePicker2.toggle()" type="button"></button>
             </div>
           </div>

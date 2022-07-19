@@ -5,7 +5,7 @@ import { innerTableData, ProjectData, ReportData } from '../modals/report.model'
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { MatTableDataSource } from '@angular/material/table';
 import { DataService } from '../services/data.service';
-import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCalendar, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { ApexLegend, ApexPlotOptions, ChartComponent } from "ng-apexcharts";
 import {
   ApexNonAxisChartSeries,
@@ -58,14 +58,16 @@ export class ReportsComponent implements OnInit {
   showChart: boolean = false;
   allProjectTotal: number = 0;
   projectAmounts: number[] = [];
+  today: NgbDateStruct;
 
   @ViewChild("chart") chart: ChartComponent;
   public chartOptions: Partial<ChartOptions>;
   constructor(private dataSvc: DataService,
-    private cd: ChangeDetectorRef) { }
+    private cd: ChangeDetectorRef, private calendar: NgbCalendar) { }
 
   ngOnInit(): void {
     this.error = false;
+    this.today = this.calendar.getToday();
     this.dataSvc.getAllProjects().subscribe({
       next: (project) => { this.projects = project.data; },
       error: (err) => {
@@ -83,6 +85,7 @@ export class ReportsComponent implements OnInit {
       }
     });
   }
+
   //methods gets called on generate report button click and calls report API to generate the report.
   onGenerateReport() {
     this.tableData = [];
@@ -90,10 +93,20 @@ export class ReportsComponent implements OnInit {
     this.allProjectTotal = 0;
     this.projectAmounts = [];
     this.showChart = false;
+    this.noDataFoundMsg = 'No Reports';
+
     this.selectedProjectName = this.selectedProjectId === '' ? 'All Projects' : this.selectedProjectName;
     this.selectedGatewayName = this.selectedGatewayId === '' ? 'All Gateways' : this.selectedGatewayName;
     let fromDate = this.fromDate ? this.fromDate.year + '-' + this.fromDate.month + '-' + this.fromDate.day : '';
     let toDate = this.toDate ? this.toDate.year + '-' + this.toDate.month + '-' + this.toDate.day : '';
+
+    let fromDateObj = new Date(fromDate);
+    let toDateObj = new Date(toDate);
+
+    if (toDateObj < fromDateObj) {
+      this.noDataFoundMsg = 'End Date should be greater than Start Date';
+    }
+
 
     this.dataSvc.getAllReports(this.selectedProjectId, this.selectedGatewayId, fromDate, toDate).subscribe(
       {
