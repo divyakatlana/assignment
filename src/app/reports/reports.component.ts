@@ -6,7 +6,7 @@ import { animate, state, style, transition, trigger } from '@angular/animations'
 import { MatTableDataSource } from '@angular/material/table';
 import { DataService } from '../services/data.service';
 import { NgbCalendar, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
-import { ApexLegend, ApexPlotOptions, ChartComponent } from "ng-apexcharts";
+import { ApexLegend, ChartComponent } from "ng-apexcharts";
 import {
   ApexNonAxisChartSeries,
   ApexResponsive,
@@ -18,7 +18,6 @@ export type ChartOptions = {
   chart: ApexChart;
   responsive: ApexResponsive[];
   labels: any;
-  plotOptions: ApexPlotOptions;
   legend: ApexLegend;
 };
 
@@ -142,6 +141,7 @@ export class ReportsComponent implements OnInit {
             })
         })
       })
+      // All projects with one gateway.
       if (this.selectedGatewayId !== 'allGateways' && this.selectedGatewayId !== '') {
         this.innerDisplayedColumns = ['Date', 'TransactionId', 'Amount'];
         this.showChart = true;

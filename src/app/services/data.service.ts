@@ -42,9 +42,9 @@ export class DataService {
   // service to get reports of the basis of selected prject, gateway, fromdate and todate.
   getAllReports(projectId: string, gatewayId: string, from?: string, to?: string): Observable<ProjectData> {
     return this.http.post<ProjectData>(environment.baseUrl + reportsEndpoint,
-      JSON.stringify({
+      {
         'projectId': projectId === 'allProjects' ? '' : projectId
         , 'gatewayId': gatewayId === 'allGateways' ? '' : gatewayId, from, to
-      }), this.httpOptions);
+      }, this.httpOptions);
   }
 }
