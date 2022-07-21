@@ -12,6 +12,7 @@ import {
   ApexResponsive,
   ApexChart
 } from "ng-apexcharts";
+import { DatePipe } from '@angular/common';
 
 export type ChartOptions = {
   series: ApexNonAxisChartSeries;
@@ -58,11 +59,13 @@ export class ReportsComponent implements OnInit {
   allProjectTotal: number = 0;
   projectAmounts: number[] = [];
   today: NgbDateStruct;
+  transformDate: Date;
 
   @ViewChild("chart") chart: ChartComponent;
   public chartOptions: Partial<ChartOptions>;
   constructor(private dataSvc: DataService,
-    private cd: ChangeDetectorRef, private calendar: NgbCalendar) { }
+    private cd: ChangeDetectorRef, private calendar: NgbCalendar, 
+    private datepipe : DatePipe) { }
 
   ngOnInit(): void {
     this.error = false;
@@ -96,8 +99,8 @@ export class ReportsComponent implements OnInit {
 
     this.selectedProjectName = this.selectedProjectId === '' ? 'All Projects' : this.selectedProjectName;
     this.selectedGatewayName = this.selectedGatewayId === '' ? 'All Gateways' : this.selectedGatewayName;
-    let fromDate = this.fromDate ? this.fromDate.year + '-' + this.fromDate.month + '-' + this.fromDate.day : '';
-    let toDate = this.toDate ? this.toDate.year + '-' + this.toDate.month + '-' + this.toDate.day : '';
+    let fromDate = this.fromDate ?  this.fromDate.day + '.' + this.fromDate.month + '.' + this.fromDate.year : '';
+    let toDate = this.toDate ? this.toDate.day+ '.' + this.toDate.month + '.' + this.toDate.year : '';
 
     let fromDateObj = new Date(fromDate);
     let toDateObj = new Date(toDate);
@@ -111,7 +114,12 @@ export class ReportsComponent implements OnInit {
       {
         next:
           (reportData) => {
+            reportData.data.forEach(data => {
+              this.transformDate = new Date(data.created);
+              data.created = this.datepipe.transform(this.transformDate, 'dd.MM.YYYY')
+            });
             this.mapResponse(reportData);
+
           }, error: (err) => { this.noDataFound = true; this.noDataFoundMsg = 'Unable to fetch Report' }
       });
   }
