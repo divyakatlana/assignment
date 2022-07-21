@@ -99,8 +99,8 @@ export class ReportsComponent implements OnInit {
 
     this.selectedProjectName = this.selectedProjectId === '' ? 'All Projects' : this.selectedProjectName;
     this.selectedGatewayName = this.selectedGatewayId === '' ? 'All Gateways' : this.selectedGatewayName;
-    let fromDate = this.fromDate ?  this.fromDate.day + '.' + this.fromDate.month + '.' + this.fromDate.year : '';
-    let toDate = this.toDate ? this.toDate.day+ '.' + this.toDate.month + '.' + this.toDate.year : '';
+    let fromDate = this.fromDate ?  this.fromDate.year + '-' + this.fromDate.month + '-' + this.fromDate.day : '';
+    let toDate = this.toDate ? this.toDate.year + '-' + this.toDate.month + '-' + this.toDate.day : '';
 
     let fromDateObj = new Date(fromDate);
     let toDateObj = new Date(toDate);
